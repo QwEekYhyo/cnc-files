@@ -5,9 +5,10 @@ use axum::{
     routing::{get, post},
     Router,
 };
+use futures::TryStreamExt;
 use std::{fs, net::SocketAddr, path::PathBuf};
 use tokio::fs::File;
-use tokio::io::AsyncWriteExt;
+use tokio_util::io::StreamReader;
 
 const UPLOAD_DIR: &str = "uploads";
 const STATIC_DIR: &str = "static";
@@ -55,12 +56,16 @@ async fn serve_static(Path(file): Path<String>) -> impl IntoResponse {
 
 async fn upload_file(mut multipart: Multipart) -> impl IntoResponse {
     while let Some(field) = multipart.next_field().await.unwrap() {
-        let file_name = field.file_name().unwrap_or("unknown").to_string();
+        let file_name = field.file_name().unwrap_or("unknown");
         let file_path = PathBuf::from(UPLOAD_DIR).join(&file_name);
         let mut file = File::create(&file_path).await.unwrap();
 
-        let data = field.bytes().await.unwrap();
-        file.write_all(&data).await.unwrap();
+        let mut reader = StreamReader::new(
+            field.map_err(|err| std::io::Error::new(std::io::ErrorKind::Other, err)),
+        );
+
+        tokio::io::copy(&mut reader, &mut file).await.unwrap();
+
         println!("Saved file: {}", file_path.display());
     }
     (StatusCode::OK, "File uploaded successfully").into_response()
