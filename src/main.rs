@@ -1,5 +1,5 @@
 use axum::{
-    extract::{Multipart, Path},
+    extract::{DefaultBodyLimit, Multipart, Path},
     http::StatusCode,
     response::IntoResponse,
     routing::{get, post},
@@ -19,7 +19,10 @@ async fn main() {
 
     let app = Router::new()
         .route("/", get(serve_index))
-        .route("/upload", post(upload_file))
+        .route(
+            "/upload",
+            post(upload_file).layer(DefaultBodyLimit::disable()),
+        )
         .route("/{file}", get(serve_static));
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
