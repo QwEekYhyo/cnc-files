@@ -1,3 +1,15 @@
+function formatFileSize(sizeInBytes) {
+    if (sizeInBytes < 1024) {
+        return `${sizeInBytes} B`;
+    } else if (sizeInBytes < 1024 ** 2) {
+        return `${(sizeInBytes / 1024).toFixed(2)} KB`;
+    } else if (sizeInBytes < 1024 ** 3) {
+        return `${(sizeInBytes / (1024 ** 2)).toFixed(2)} MB`;
+    } else {
+        return `${(sizeInBytes / (1024 ** 3)).toFixed(2)} GB`;
+    }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     const dropArea = document.getElementById('drop-area');
     const fileInput = document.getElementById('file-input');
@@ -18,7 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
             
             const fileSize = document.createElement('span');
             fileSize.classList.add('file-size');
-            fileSize.textContent = `${(file.size / 1024).toFixed(2)} KB`;
+            fileSize.textContent = formatFileSize(file.size);
 
             const removeIcon = document.createElement('span');
             removeIcon.classList.add('remove-icon');
