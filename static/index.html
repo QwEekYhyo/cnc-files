@@ -8,13 +8,15 @@
 </head>
 <body>
     <div class="container">
-        <h1>Envoi de fichiers</h1>
+        <h1>CNC Loader</h1>
         <p>Glissez déposez des fichiers ci-dessous ou cliquez pour sélectionner un fichier.</p>
         
         <div id="drop-area" class="drop-area">
             <input type="file" id="file-input" multiple hidden>
             <p>Déposez des fichiers ici ou cliquez pour parcourir les fichiers.</p>
         </div>
+        
+        <ul id="file-list"></ul>
         
         <button id="upload-button">Envoyer</button>
         <div id="progress"></div>

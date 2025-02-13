@@ -16,12 +16,16 @@ body {
 }
 
 .drop-area {
+    height: 20vh;
     border: 2px dashed #007bff;
     padding: 20px;
     cursor: pointer;
     margin: 20px 0;
     background-color: #e9f5ff;
     border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .drop-area p {
@@ -47,6 +51,30 @@ button:hover {
     background-color: #0056b3;
 }
 
-#progress-container {
+#upload-button {
+    margin-bottom: 20px;
+}
+
+#file-list {
     margin-top: 20px;
+    list-style-type: none;
+    padding: 0;
+}
+
+#file-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    padding: 10px;
+    border-radius: 5px;
+    margin: 5px 0;
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+#file-list li:hover {
+    background-color: #007bff;
+    color: white;
+    transform: scale(1.02);
 }

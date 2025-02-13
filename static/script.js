@@ -3,7 +3,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const fileInput = document.getElementById('file-input');
     const uploadButton = document.getElementById('upload-button');
     const progressDiv = document.getElementById('progress');
+    const fileList = document.getElementById('file-list');
     let files = [];
+
+    function updateFileList() {
+        fileList.innerHTML = '';
+        
+        for (const file of files) {
+            const li = document.createElement('li');
+            li.textContent = file.name;
+            fileList.appendChild(li);
+        }
+    }
 
     dropArea.addEventListener('dragover', (e) => {
         e.preventDefault();
@@ -18,10 +29,14 @@ document.addEventListener("DOMContentLoaded", () => {
         e.preventDefault();
         dropArea.classList.remove('highlight');
         files = e.dataTransfer.files;
+        updateFileList();
     });
 
     dropArea.addEventListener('click', () => fileInput.click());
-    fileInput.addEventListener('change', (e) => files = e.target.files);
+    fileInput.addEventListener('change', (e) => {
+        files = e.target.files;
+        updateFileList();
+    });
 
     uploadButton.addEventListener('click', async () => {
         if (files.length === 0) {
@@ -40,9 +55,13 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         if (response.ok) {
-            progressDiv.innerText = 'Upload successful!';
+            progressDiv.style.color = 'green';
+            progressDiv.innerText = 'Envoi réussi !';
+            files = [];
+            updateFileList();
         } else {
-            progressDiv.innerText = 'Upload failed!';
+            progressDiv.style.color = 'red';
+            progressDiv.innerText = 'Echec de l\'envoi !';
         }
     });
 });
