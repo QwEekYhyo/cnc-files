@@ -18,8 +18,8 @@ async fn main() {
 
     let app = Router::new()
         .route("/", get(serve_index))
-        .route("/upload", post(upload_file));
-    // .route("/:file", get(serve_static));
+        .route("/upload", post(upload_file))
+        .route("/{file}", get(serve_static));
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     println!("Listening on http://{}", addr);
@@ -36,7 +36,19 @@ async fn serve_index() -> impl IntoResponse {
 async fn serve_static(Path(file): Path<String>) -> impl IntoResponse {
     let path = PathBuf::from(STATIC_DIR).join(&file);
     match tokio::fs::read(&path).await {
-        Ok(contents) => (StatusCode::OK, contents).into_response(),
+        Ok(contents) => {
+            let content_type = match path.extension().and_then(|ext| ext.to_str()) {
+                Some("html") => "text/html",
+                Some("css") => "text/css",
+                Some("js") => "application/javascript",
+                Some("png") => "image/png",
+                Some("jpg") | Some("jpeg") => "image/jpeg",
+                Some("gif") => "image/gif",
+                Some("svg") => "image/svg+xml",
+                _ => "application/octet-stream",
+            };
+            ([("Content-Type", content_type)], contents).into_response()
+        }
         Err(_) => (StatusCode::NOT_FOUND, "File not found").into_response(),
     }
 }
