@@ -11,7 +11,26 @@ document.addEventListener("DOMContentLoaded", () => {
         
         for (const file of files) {
             const li = document.createElement('li');
-            li.textContent = file.name;
+            
+            const fileName = document.createElement('span');
+            fileName.classList.add('file-name');
+            fileName.textContent = file.name;
+            
+            const fileSize = document.createElement('span');
+            fileSize.classList.add('file-size');
+            fileSize.textContent = `${(file.size / 1024).toFixed(2)} KB`;
+
+            const removeIcon = document.createElement('span');
+            removeIcon.classList.add('remove-icon');
+            removeIcon.textContent = '❌';
+            removeIcon.onclick = () => {
+                files = files.filter(f => f !== file);
+                updateFileList();
+            };
+
+            li.appendChild(fileName);
+            li.appendChild(fileSize);
+            li.appendChild(removeIcon);
             fileList.appendChild(li);
         }
     }
@@ -28,13 +47,13 @@ document.addEventListener("DOMContentLoaded", () => {
     dropArea.addEventListener('drop', (e) => {
         e.preventDefault();
         dropArea.classList.remove('highlight');
-        files = e.dataTransfer.files;
+        files = Array.from(e.dataTransfer.files);
         updateFileList();
     });
 
     dropArea.addEventListener('click', () => fileInput.click());
     fileInput.addEventListener('change', (e) => {
-        files = e.target.files;
+        files = Array.from(e.target.files);
         updateFileList();
     });
 

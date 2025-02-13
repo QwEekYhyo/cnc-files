@@ -78,3 +78,24 @@ button:hover {
     color: white;
     transform: scale(1.02);
 }
+
+.file-name {
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.file-size {
+    color: #777;
+    font-size: 0.9em;
+    margin-right: 10px;
+}
+
+.remove-icon {
+    cursor: pointer;
+    color: #ff0000;
+    font-size: 18px;
+}
+
+.remove-icon:hover {
+    color: #cc0000;
+}
