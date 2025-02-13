@@ -69,7 +69,7 @@ document.addEventListener("DOMContentLoaded", () => {
         updateFileList();
     });
 
-    uploadButton.addEventListener('click', async () => {
+    uploadButton.addEventListener('click', () => {
         if (files.length === 0) {
             alert('No file selected');
             return;
@@ -80,19 +80,32 @@ document.addEventListener("DOMContentLoaded", () => {
             formData.append('file', file);
         }
 
-        const response = await fetch('/upload', {
-            method: 'POST',
-            body: formData,
-        });
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/upload', true);
 
-        if (response.ok) {
-            progressDiv.style.color = 'green';
-            progressDiv.innerText = 'Envoi réussi !';
-            files = [];
-            updateFileList();
-        } else {
-            progressDiv.style.color = 'red';
-            progressDiv.innerText = 'Echec de l\'envoi !';
+        progressDiv.innerHTML = '<div class="progress-bar"><div class="progress-fill"></div></div>';
+        const progressFill = document.querySelector(".progress-fill");
+
+        xhr.upload.onprogress = (event) => {
+            if (event.lengthComputable) {
+                let percent = (event.loaded / event.total) * 100;
+                progressFill.style.width = percent + '%';
+            }
+        };
+
+        const displayErrorMessage = () => {
+            progressDiv.innerHTML += "<p style='color:red'>Échec de l'envoi !</p>";
         }
+
+        xhr.onload = () => {
+            if (xhr.status == 200) {
+                progressDiv.innerHTML += '<p style="color:green">Envoi réussi !</p>';
+                files = [];
+                updateFileList();
+            } else displayErrorMessage();
+        };
+        xhr.onerror = displayErrorMessage;
+
+        xhr.send(formData);
     });
 });
