@@ -38,6 +38,9 @@ async fn serve_static(
     Path(file): Path<String>,
 ) -> Result<impl IntoResponse, (StatusCode, &'static str)> {
     let path = PathBuf::from(STATIC_DIR).join(&file);
+
+    // FIXME: differentiate ENOENT (no such file or directory)
+    // from other I/O errors
     let contents = tokio::fs::read(&path)
         .await
         .map_err(|_| (StatusCode::NOT_FOUND, "File not found"))?;
