@@ -61,7 +61,7 @@ async fn upload_file(
 ) -> Result<impl IntoResponse, (StatusCode, &'static str)> {
     while let Some(field) = multipart.next_field().await.map_internal_err()? {
         let file_name = field.file_name().unwrap_or("unknown");
-        let file_path = PathBuf::from(UPLOAD_DIR).join(&file_name);
+        let file_path = PathBuf::from(UPLOAD_DIR).join(file_name);
         let mut file = File::create(&file_path).await.map_internal_err()?;
 
         let mut reader = StreamReader::new(
