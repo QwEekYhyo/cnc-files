@@ -1,14 +1,19 @@
 use axum::{
-    extract::{DefaultBodyLimit, Multipart, Path},
+    extract::{DefaultBodyLimit, Multipart},
     http::StatusCode,
     response::IntoResponse,
-    routing::{get, post},
+    routing::post,
     Router,
 };
 use futures::TryStreamExt;
-use std::{fs, net::SocketAddr, path::PathBuf};
+use std::{
+    env, fs,
+    net::{IpAddr, Ipv4Addr, SocketAddr},
+    path::PathBuf,
+};
 use tokio::fs::File;
 use tokio_util::io::StreamReader;
+use tower_http::services::ServeDir;
 
 const UPLOAD_DIR: &str = "uploads";
 const STATIC_DIR: &str = "static";
@@ -18,55 +23,38 @@ async fn main() {
     fs::create_dir_all(UPLOAD_DIR).expect("Failed to create upload directory");
 
     let app = Router::new()
-        .route("/", get(serve_index))
         .route(
             "/upload",
             post(upload_file).layer(DefaultBodyLimit::disable()),
         )
-        .route("/{file}", get(serve_static));
+        .fallback_service(ServeDir::new(STATIC_DIR));
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
-    println!("Listening on http://{}", addr);
+    let addr = env::var("ADDR")
+        .ok()
+        .map(|s| s.parse::<IpAddr>().expect("invalid address"));
+    let port = env::var("PORT")
+        .ok()
+        .map(|s| s.parse::<u16>().expect("invalid port"));
 
-    let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
+    let sockaddr = SocketAddr::from((
+        addr.unwrap_or(IpAddr::V4(Ipv4Addr::UNSPECIFIED)),
+        port.unwrap_or(3000),
+    ));
+    println!("Listening on http://{sockaddr}");
+
+    let listener = tokio::net::TcpListener::bind(&sockaddr).await.unwrap();
 
     axum::serve(listener, app).await.unwrap();
-}
-
-async fn serve_index() -> impl IntoResponse {
-    serve_static(Path("index.html".to_string())).await
-}
-
-async fn serve_static(
-    Path(file): Path<String>,
-) -> Result<impl IntoResponse, (StatusCode, &'static str)> {
-    let path = PathBuf::from(STATIC_DIR).join(&file);
-
-    // FIXME: differentiate ENOENT (no such file or directory)
-    // from other I/O errors
-    let contents = tokio::fs::read(&path)
-        .await
-        .map_err(|_| (StatusCode::NOT_FOUND, "File not found"))?;
-
-    let content_type = match path.extension().and_then(|ext| ext.to_str()) {
-        Some("html") => "text/html",
-        Some("css") => "text/css",
-        Some("js") => "application/javascript",
-        Some("png") => "image/png",
-        Some("jpg") | Some("jpeg") => "image/jpeg",
-        Some("gif") => "image/gif",
-        Some("svg") => "image/svg+xml",
-        _ => "application/octet-stream",
-    };
-
-    Ok(([("Content-Type", content_type)], contents).into_response())
 }
 
 async fn upload_file(
     mut multipart: Multipart,
 ) -> Result<impl IntoResponse, (StatusCode, &'static str)> {
     while let Some(field) = multipart.next_field().await.map_internal_err()? {
-        let file_name = field.file_name().unwrap_or("unknown");
+        let Some(file_name) = field.file_name() else {
+            continue;
+        };
+
         let file_path = PathBuf::from(UPLOAD_DIR).join(file_name);
         let mut file = File::create(&file_path).await.map_internal_err()?;
 
